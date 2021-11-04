@@ -15,6 +15,7 @@ respect to the layer parameters.
 import numpy as np
 import mlp.initialisers as init
 from mlp import DEFAULT_SEED
+from scipy.stats import bernoulli
 
 class Layer(object):
     """Abstract class defining the interface for a layer."""
@@ -645,6 +646,7 @@ class DropoutLayer(StochasticLayer):
         self.incl_prob = incl_prob
         self.share_across_batch = share_across_batch
         self.rng = rng
+        self.mask = None
 
     def fprop(self, inputs, stochastic=True):
         """Forward propagates activations through the layer transformation.
@@ -661,7 +663,15 @@ class DropoutLayer(StochasticLayer):
         Returns:
             outputs: Array of layer outputs of shape (batch_size, output_dim).
         """
-        raise NotImplementedError
+        if stochastic:
+            self.mask = np.zeros((inputs.shape))
+            mask = self.rng.binomial(n=1, p=self.incl_prob, size=inputs.shape[1:])
+            for i in range(inputs.shape[0]):
+                self.mask[i] = mask
+        else:
+            self.mask = self.rng.binomial(n=1, p=self.incl_prob, size=inputs.shape) / self.incl_prob
+        self.mask = np.logical_not(self.mask)
+        return inputs * self.mask
 
     def bprop(self, inputs, outputs, grads_wrt_outputs):
         """Back propagates gradients through a layer.
@@ -681,7 +691,7 @@ class DropoutLayer(StochasticLayer):
             Array of gradients with respect to the layer inputs of shape
             (batch_size, input_dim).
         """
-        raise NotImplementedError
+        return grads_wrt_outputs * self.mask
 
     def __repr__(self):
         return 'DropoutLayer(incl_prob={0:.1f})'.format(self.incl_prob)

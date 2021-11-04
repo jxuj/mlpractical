@@ -29,7 +29,10 @@ class L1Penalty(object):
         Returns:
             Value of penalty term.
         """
-        raise NotImplementedError
+        penalty_value = 0.0
+        for sub_parameter in np.nditer(parameter):
+            penalty_value += abs(sub_parameter)
+        return self.coefficient * penalty_value
 
     def grad(self, parameter):
         """Calculate the penalty gradient with respect to the parameter.
@@ -41,7 +44,13 @@ class L1Penalty(object):
             Value of penalty gradient with respect to parameter. This
             should be an array of the same shape as the parameter.
         """
-        raise NotImplementedError
+        penalty_grad = parameter
+        for sub_parameter in np.nditer(parameter, op_flags = ['readwrite']):
+            if sub_parameter > 0:
+                sub_parameter[...] = self.coefficient
+            elif sub_parameter < 0:
+                sub_parameter[...] = -1 * self.coefficient
+        return penalty_grad
 
     def __repr__(self):
         return 'L1Penalty({0})'.format(self.coefficient)
@@ -72,7 +81,10 @@ class L2Penalty(object):
         Returns:
             Value of penalty term.
         """
-        raise NotImplementedError
+        penalty_value = 0.0
+        for sub_parameter in np.nditer(parameter):
+            penalty_value += sub_parameter**2
+        return self.coefficient / 2 * penalty_value
 
     def grad(self, parameter):
         """Calculate the penalty gradient with respect to the parameter.
@@ -84,7 +96,7 @@ class L2Penalty(object):
             Value of penalty gradient with respect to parameter. This
             should be an array of the same shape as the parameter.
         """
-        raise NotImplementedError
+        return self.coefficient * parameter
 
     def __repr__(self):
         return 'L2Penalty({0})'.format(self.coefficient)
