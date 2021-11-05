@@ -44,13 +44,14 @@ class L1Penalty(object):
             Value of penalty gradient with respect to parameter. This
             should be an array of the same shape as the parameter.
         """
-        penalty_grad = parameter
-        for sub_parameter in np.nditer(parameter, op_flags = ['readwrite']):
-            if sub_parameter > 0:
-                sub_parameter[...] = self.coefficient
-            elif sub_parameter < 0:
-                sub_parameter[...] = -1 * self.coefficient
-        return penalty_grad
+        #penalty_grad = parameter
+        #for sub_parameter in np.nditer(parameter, op_flags = ['readwrite']):
+        #    if sub_parameter > 0:
+        #        sub_parameter[...] = self.coefficient
+        #    elif sub_parameter < 0:
+        #        sub_parameter[...] = -1 * self.coefficient
+        #return penalty_grad
+        return self.coefficient * np.sign(parameter)
 
     def __repr__(self):
         return 'L1Penalty({0})'.format(self.coefficient)
